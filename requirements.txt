@@ -17,3 +17,4 @@ flask_wtf
 Flask-Bootstrap
 sphinx
 recommonmark
+sphinx-bootstrap-theme
