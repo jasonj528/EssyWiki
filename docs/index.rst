@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to EssyWiki's documentation!
+CSC 440 EssyWiki Project Documentation
 ====================================
 
 .. _about-docs:
@@ -15,19 +15,38 @@ Welcome to EssyWiki's documentation!
    introduction
    getting_started
    features
-   usage
    
 .. _class-docs:
 
 .. toctree::
    :maxdepth: 2
    :caption: Classes:
+   
+   wiki
+   processor
+   page
+   user
+   usermanager
+   forms
 
-.. _static-docs:
+.. _web-docs:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Static Content:
+   :caption: Web Interface:
+   
+   static
+   page_web
+   user_web
+   
+.. _rest-docs:
+
+.. toctree::
+   :maxdepth: 2
+   :caption: REST API:
+   
+   page_rest
+   user_rest
 
 Indices and tables
 ==================
