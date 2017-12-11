@@ -1,4 +1,4 @@
-from recommonmark.parse import CommonMarkParser
+from recommonmark.parser import CommonMarkParser
 
 source_parsers = {
     '.md': CommonMarkParser,
