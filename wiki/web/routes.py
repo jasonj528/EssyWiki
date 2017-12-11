@@ -13,14 +13,20 @@ from flask_login import login_required
 from flask_login import login_user
 from flask_login import logout_user
 
+import json
+
+from operator import itemgetter
+
 from wiki.core import Processor
 from wiki.web.forms import EditorForm
 from wiki.web.forms import LoginForm
 from wiki.web.forms import SearchForm
 from wiki.web.forms import URLForm
+from wiki.web.forms import addUserForm
 from wiki.web import current_wiki
 from wiki.web import current_users
 from wiki.web.user import protect
+from wiki.web import get_users
 
 
 bp = Blueprint('wiki', __name__)
@@ -99,8 +105,11 @@ def move(url):
 @protect
 def delete(url):
     page = current_wiki.get_or_404(url)
-    current_wiki.delete(url)
-    flash('Page "%s" was deleted.' % page.title, 'success')
+    if "admin" in current_user.data.get('roles'):
+        current_wiki.delete(url)
+        flash('Page "%s" was deleted.' % page.title, 'success')
+    else:
+        flash('Unable to delete page. You do not have permission.', 'error')
     return redirect(url_for('wiki.home'))
 
 
@@ -117,7 +126,6 @@ def tag(name):
     tagged = current_wiki.index_by_tag(name)
     return render_template('tag.html', pages=tagged, tag=name)
 
-
 @bp.route('/search/', methods=['GET', 'POST'])
 @protect
 def search():
@@ -129,6 +137,24 @@ def search():
     return render_template('search.html', form=form, search=None)
 
 
+@bp.route('/adduser/', methods=['GET', 'POST'])
+@protect
+def addUser():
+    form = addUserForm()
+    if form.validate_on_submit():
+        name = form.name.data
+        pword = form.pword.data
+        role = request.form['role']
+        um = get_users()
+        add = um.add_user(name, pword, role)
+        if not add:
+            flash('Username already exists', 'error')
+        else:
+            flash('User created successfully', 'success')
+        return redirect(request.args.get("next") or url_for('wiki.index'))
+    return render_template('addUser.html', form=form)
+	
+	
 @bp.route('/user/login/', methods=['GET', 'POST'])
 def user_login():
     form = LoginForm()
@@ -136,6 +162,7 @@ def user_login():
         user = current_users.get_user(form.name.data)
         login_user(user)
         user.set('authenticated', True)
+		user.set('active', True)
         flash('Login successful.', 'success')
         return redirect(request.args.get("next") or url_for('wiki.index'))
     return render_template('login.html', form=form)
@@ -145,29 +172,57 @@ def user_login():
 @login_required
 def user_logout():
     current_user.set('authenticated', False)
+	current_user.set('active', False)
     logout_user()
     flash('Logout successful.', 'success')
     return redirect(url_for('wiki.index'))
 
 
 @bp.route('/user/')
+@protect
 def user_index():
-    pass
-
-
-@bp.route('/user/create/')
-def user_create():
-    pass
+    users = []
+    """move this to user.py"""
+    with open("user/users.json") as file:
+        data = json.load(file)
+        k = data.keys()
+        for u in k:
+            users.append([u])
+        i = 0
+        for v in data.values():
+            users[i].append(v['roles'][0])
+            i += 1
+        users = sorted(users, key=itemgetter(1))
+    return render_template("user.html", users=users)
 
 
 @bp.route('/user/<int:user_id>/')
 def user_admin(user_id):
-    pass
+    pass	
 
+	
+@bp.route('/user/changerole/<string:name>/<string:role>')
+@protect
+def user_changerole(name, role):
+    um = get_users()
+    if "admin" in current_user.data.get('roles'):
+        um.update_role(name, role)
+        flash("User role successfully changed.", 'success')
+    else:
+        flash("Unable to change user role. You do not have permission.", 'error')
+    return redirect(url_for('wiki.user_index'))
+	
 
-@bp.route('/user/delete/<int:user_id>/')
-def user_delete(user_id):
-    pass
+@bp.route('/user/delete/<string:name>/')
+@protect
+def user_delete(name):
+    um = get_users()
+    if "admin" in current_user.data.get('roles'):
+        um.delete_user(name)
+        flash("User successfully deleted.", 'success')
+    else:
+        flash("Unable to delete user. You do not have permission.", 'error')
+    return redirect(url_for('wiki.user_index'))
 
 
 """

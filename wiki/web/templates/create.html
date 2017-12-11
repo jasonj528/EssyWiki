@@ -2,11 +2,15 @@
 
 {% block title %}Create a new page{% endblock title %}
 {% block content %}
+{% if "admin" in current_user.data.get('roles') or "contributor" in current_user.data.get('roles') %}
 <form method="POST" class="form-inline">
 	{{ form.hidden_tag() }}
 	{{ input(form.url, placeholder="URL of the new page", autocomplete="off") }}
 	<input type="submit" class="btn btn-success" value="Create">
 </form>
+{% else %}
+<p>You do not have permission to access this page</p>
+{% endif %}
 {% endblock content %}
 
 {% block sidebar %}
