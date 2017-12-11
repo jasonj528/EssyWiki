@@ -10,6 +10,7 @@ from flask import request
 from flask import url_for
 from flask import current_app
 from flask import jsonify
+from flask import send_from_directory
 from flask_login import current_user
 from flask_login import login_required
 from flask_login import login_user
@@ -179,16 +180,23 @@ def user_delete(user_id):
     pass
 
 
-@bp.route('/ajax/upload/', methods=['GET', 'POST'])
+@bp.route('/upload/', methods=['GET', 'POST'])
 def upload_image():
     if request.method == 'POST':
-        img = request.files['file']
+        img = request.files['file0']
         if img and is_img(img.filename):
             filename = secure_filename(img.filename)
             img.save(os.path.join(current_app.config['IMG_DIR'], filename))
             # returns a json list, since that's what the editor javascript expects
             # don't ask me why it wants a list
-            return jsonify([url_for(current_app.config['IMG_DIR'], filename=filename)])
+            return jsonify(["/upload/" + filename])
+        else:
+            flash("There was a problem uploading your image.")
+
+
+@bp.route('/upload/<string:filename>')
+def image_response(filename):
+    return send_from_directory(current_app.config['IMG_DIR'], filename)
 
 
 """
