@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Create User{% endblock title %}
+
+{% block content %}
+    {% if "admin" in current_user.data.get('roles') %}
+    <form class="form form-inline" method="POST">
+	    {{ form.hidden_tag() }}
+	    {{ form.name(placeholder='Username') }}
+	    {{ form.pword(placeholder='Password') }}
+        <select class="form-control" id="sel1" name="role">
+            <option>user</option>
+            <option>contributor</option>
+            <option>admin</option>
+        </select>
+	    <input type="submit" class="btn btn-primary" value="Create">
+    </form>
+    {% else %}
+    <p>You do not have permission to access this page</p>
+    {% endif %}
+{% endblock content %}

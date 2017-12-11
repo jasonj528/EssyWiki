@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}User Index{% endblock title %}
+
+{% block content %}
+{% if users %}
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Role</th>
+                {% if "admin" in current_user.data.get('roles') %}
+                    <th>Change Role</th>
+                    <th></th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user[0] }}</td>
+                    <td>{{ user[1] }}</td>
+                    {% if "admin" in current_user.data.get('roles') %}
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Select Role<span class="caret"></span></button>
+                            <ul class="dropdown-menu">
+                                <li><a href="{{ url_for('wiki.user_changerole', name=user[0], role="admin") }}">Admin</a></li>
+                                <li><a href="{{ url_for('wiki.user_changerole', name=user[0], role="contributor") }}">Contributor</a></li>
+                                <li><a href="{{ url_for('wiki.user_changerole', name=user[0], role="user") }}">User</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                    <td><a href="{{ url_for('wiki.user_delete', name=user[0]) }}" class="text-error">delete</a></td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>There are no users</p>
+{% endif %}
+{% endblock content %}

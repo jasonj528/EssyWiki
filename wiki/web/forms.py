@@ -39,6 +39,9 @@ class EditorForm(Form):
     body = TextAreaField('', [InputRequired()])
     tags = TextField('')
 
+class addUserForm(Form):
+    name = TextField('', [InputRequired()])
+    pword = PasswordField('',[InputRequired()])
 
 class LoginForm(Form):
     name = TextField('', [InputRequired()])

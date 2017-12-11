@@ -19,14 +19,20 @@
 								<li><a href="{{ url_for('wiki.index') }}">Index</a></li>
 								<li><a href="{{ url_for('wiki.tags') }}">Tags</a></li>
 								<li><a href="{{ url_for('wiki.search') }}">Search</a></li>
+								<li><a href="{{ url_for('wiki.user_index') }}">Users</a></li>
 								<li class="divider-vertical"></li>
-								<li><a href="{{ url_for('wiki.create') }}">New Page</a></li>
+								{% if current_user.is_active and ("admin" in current_user.data.get('roles') or "contributor" in current_user.data.get('roles')) %}
+									<li><a href="{{ url_for('wiki.create') }}">New Page</a></li>
+									{% if "admin" in current_user.data.get('roles') %}
+                                        <li><a href="{{ url_for('wiki.addUser') }}">Add User</a></li>
+                                    {% endif %}
 								<li class="divider-vertical"></li>
+								{% endif %}
 								<li></li>
 							</ul>
 
 							<ul class="nav pull-right">
-								{% if current_user.is_anonymous %}
+								{% if not current_user.is_active %}
 									<li><a href="{{ url_for('wiki.user_login') }}">Login</a></li>
 								{% else %}
 									<li><a href="{{ url_for('wiki.user_logout') }}">Logout</a></li>

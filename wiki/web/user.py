@@ -29,8 +29,8 @@ class UserManager(object):
         with open(self.file, 'w') as f:
             f.write(json.dumps(data, indent=2))
 
-    def add_user(self, name, password,
-                 active=True, roles=[], authentication_method=None):
+    def add_user(self, name, password, role,
+                 active=False, authentication_method=None):
         users = self.read()
         if users.get(name):
             return False
@@ -38,9 +38,10 @@ class UserManager(object):
             authentication_method = get_default_authentication_method()
         new_user = {
             'active': active,
-            'roles': roles,
             'authentication_method': authentication_method,
-            'authenticated': False
+            'password': password,
+            'authenticated': False,
+            'roles': [role]
         }
         # Currently we have only two authentication_methods: cleartext and
         # hash. If we get more authentication_methods, we will need to go to a
@@ -70,9 +71,15 @@ class UserManager(object):
         self.write(users)
         return True
 
+
     def update(self, name, userdata):
         data = self.read()
         data[name] = userdata
+        self.write(data)
+
+    def update_role(self, name, role):
+        data = self.read()
+        data[name]['roles'] = [role]
         self.write(data)
 
 
@@ -97,9 +104,6 @@ class User(object):
 
     def is_active(self):
         return self.data.get('active')
-
-    def is_anonymous(self):
-        return False
 
     def get_id(self):
         return self.name
