@@ -8,10 +8,13 @@ from flask import redirect
 from flask import render_template
 from flask import request
 from flask import url_for
+from flask import current_app
+from flask import jsonify
 from flask_login import current_user
 from flask_login import login_required
 from flask_login import login_user
 from flask_login import logout_user
+from werkzeug.utils import secure_filename
 
 from wiki.core import Processor
 from wiki.web.forms import EditorForm
@@ -21,9 +24,15 @@ from wiki.web.forms import URLForm
 from wiki.web import current_wiki
 from wiki.web import current_users
 from wiki.web.user import protect
-
+import os
 
 bp = Blueprint('wiki', __name__)
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+
+def is_img(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 @bp.route('/')
@@ -168,6 +177,18 @@ def user_admin(user_id):
 @bp.route('/user/delete/<int:user_id>/')
 def user_delete(user_id):
     pass
+
+
+@bp.route('/ajax/upload/', methods=['GET', 'POST'])
+def upload_image():
+    if request.method == 'POST':
+        img = request.files['file']
+        if img and is_img(img.filename):
+            filename = secure_filename(img.filename)
+            img.save(os.path.join(current_app.config['IMG_DIR'], filename))
+            # returns a json list, since that's what the editor javascript expects
+            # don't ask me why it wants a list
+            return jsonify([url_for(current_app.config['IMG_DIR'], filename=filename)])
 
 
 """

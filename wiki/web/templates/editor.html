@@ -14,7 +14,7 @@ Wiki Editor
 		<form method="post" class="form">
 			{{ form.hidden_tag() }}
 			{{ input(form.title, placeholder="Title", class="span7", autocomplete="off") }}
-			{{ input(form.body, placeholder="Markdown", class="span7", rows="20") }}
+			{{ input(form.body, placeholder="Markdown", class="span7", rows="20", id="editor") }}
 			{{ input(form.tags, placeholder="Tags (comma separated)", class="span7", autocomplete="off") }}
 			<div class="form-actions">
         <div class="pull-left">
@@ -84,5 +84,9 @@ $('#previewlink').on('click', function() {
 $('#previewbtn').on('click', function(event) {
 	event.preventDefault();
 	$('#previewlink').click();
+});
+$('#editor').markdownEditor({
+    imageUpload: true,
+    uploadPath: {{ url_for('wiki.upload_image') }}
 });
 {%- endblock postscripts %}
