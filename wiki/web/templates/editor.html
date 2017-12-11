@@ -85,4 +85,10 @@ $('#previewbtn').on('click', function(event) {
 	event.preventDefault();
 	$('#previewlink').click();
 });
+$(function () {
+    $('textarea').markdownEditor({
+        imageUpload: true,
+        uploadPath: "{{ url_for('wiki.upload_image') }}"
+    });
+});
 {%- endblock postscripts %}

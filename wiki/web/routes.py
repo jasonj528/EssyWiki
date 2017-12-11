@@ -8,10 +8,14 @@ from flask import redirect
 from flask import render_template
 from flask import request
 from flask import url_for
+from flask import current_app
+from flask import jsonify
+from flask import send_from_directory
 from flask_login import current_user
 from flask_login import login_required
 from flask_login import login_user
 from flask_login import logout_user
+from werkzeug.utils import secure_filename
 
 import json
 
@@ -27,9 +31,16 @@ from wiki.web import current_wiki
 from wiki.web import current_users
 from wiki.web.user import protect
 from wiki.web import get_users
+import os
 
 
 bp = Blueprint('wiki', __name__)
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+
+def is_img(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 @bp.route('/')
@@ -125,6 +136,7 @@ def tags():
 def tag(name):
     tagged = current_wiki.index_by_tag(name)
     return render_template('tag.html', pages=tagged, tag=name)
+
 
 @bp.route('/search/', methods=['GET', 'POST'])
 @protect
@@ -223,6 +235,25 @@ def user_delete(name):
     else:
         flash("Unable to delete user. You do not have permission.", 'error')
     return redirect(url_for('wiki.user_index'))
+
+
+@bp.route('/upload/', methods=['GET', 'POST'])
+def upload_image():
+    if request.method == 'POST':
+        img = request.files['file0']
+        if img and is_img(img.filename):
+            filename = secure_filename(img.filename)
+            img.save(os.path.join(current_app.config['IMG_DIR'], filename))
+            # returns a json list, since that's what the editor javascript expects
+            # don't ask me why it wants a list
+            return jsonify(["/upload/" + filename])
+        else:
+            flash("There was a problem uploading your image.")
+
+
+@bp.route('/upload/<string:filename>')
+def image_response(filename):
+    return send_from_directory(current_app.config['IMG_DIR'], filename)
 
 
 """
