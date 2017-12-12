@@ -40,7 +40,7 @@ This function takes the tag that the user has selected, either from the tags pag
 
 This function provides the user with a search form, where upon submitting they will by given a list of results of their search.
 
-**Unimplemented
+**Unimplemented**
 
 ### history(url)
 
