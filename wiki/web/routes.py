@@ -90,6 +90,10 @@ def edit(url):
             page['author'] = "Guest"
         else:
             page['author'] = session['username']
+        # either here or in Page.save() I'd likely store the diff
+        # diff files will come on the form [PageName]_[Revision Number]_[Date Revised]_[Author].diff
+        # this naming convention was so that it could be split on _'s and give information without reading
+        # the diff files
         page.save()
         flash('"%s" was saved.' % page.title, 'success')
         return redirect(url_for('wiki.display', url=url))
@@ -275,8 +279,10 @@ def history(url):
 @bp.route('<path:url>/rev/<int:rev_num>')
 def revision(url, rev_num):
     list = find_diffs(url)
-    cur = list[rev_num]
-    temp_rollback(list, rev_num)
+    new_url = temp_rollback(list, rev_num)
+    # here I intended to render the page template with a temporary .md file
+    # I would change the template to change the effect of the side buttons
+    # Edit would
 
 
 # returns a list of diffs for the url, if any
@@ -292,11 +298,14 @@ def find_diffs(url):
     return sorted(list, key=lambda k: k['rev_num'], reverse=True)
 
 
+# returns a url only usable in the revision path
 def temp_rollback(diffs, rev_num):
     if len(diffs) > 0:
         for diff in diffs:
             with open(os.path.join(current_app.config('CONTENT_DIR'), diff['filename'])) as f:
-                f.read().splitlines(1)
+                # f.read().splitlines(1)
+                # here I intended to iterate from most recent diff to the one specified, applying
+                # them as patches
 
 
 
