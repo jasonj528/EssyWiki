@@ -39,3 +39,13 @@ This function takes the tag that the user has selected, either from the tags pag
 ### search()
 
 This function provides the user with a search form, where upon submitting they will by given a list of results of their search.
+
+**Unimplemented
+
+### history(url)
+
+This function indexes revisions for a particular page. A function find_diffs(url) achieves this by searching a for .diff files containing the url in their filename; the function also stores some data from the filename in a way that is useful for populating the history.html template that the history function returns.
+
+### revision(url, rev_num)
+
+This function displays a page at the given revision number; it uses the same template as pages typically use, but first performs an operation temp_rollback(diffs, rev_num) which creates a temporary .md file ignored by other routes which will be used for the page content.
