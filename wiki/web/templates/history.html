@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Edit History: {{ page.title }} {% endblock title %}
+
+{% block content %}
+{% if rev_urls %}
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Revision #</th>
+                <th>Date</th>
+                <th>Author</th>
+                <th>View This Edit</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for url in rev_urls %}
+                <tr>
+                    <td>{{ url['rev_num'] }}</td>
+                    <td>{{ url['date'] }}</td>
+                    <td>{{ url['author'] }}</td>
+                    <td><a href="{{ url_for('wiki.revision', rev_num=url.rev_num) }}" class="text-error">View</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>This is the only version of the page.</p>
+{% endif %}
+{% endblock content %}

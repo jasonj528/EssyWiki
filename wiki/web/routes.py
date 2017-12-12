@@ -11,6 +11,7 @@ from flask import url_for
 from flask import current_app
 from flask import jsonify
 from flask import send_from_directory
+from flask import session
 from flask_login import current_user
 from flask_login import login_required
 from flask_login import login_user
@@ -32,7 +33,7 @@ from wiki.web import current_users
 from wiki.web.user import protect
 from wiki.web import get_users
 import os
-
+import difflib
 
 bp = Blueprint('wiki', __name__)
 
@@ -85,6 +86,10 @@ def edit(url):
         if not page:
             page = current_wiki.get_bare(url)
         form.populate_obj(page)
+        if session['username'] is None:
+            page['author'] = "Guest"
+        else:
+            page['author'] = session['username']
         page.save()
         flash('"%s" was saved.' % page.title, 'success')
         return redirect(url_for('wiki.display', url=url))
@@ -165,8 +170,8 @@ def addUser():
             flash('User created successfully', 'success')
         return redirect(request.args.get("next") or url_for('wiki.index'))
     return render_template('addUser.html', form=form)
-	
-	
+
+
 @bp.route('/user/login/', methods=['GET', 'POST'])
 def user_login():
     form = LoginForm()
@@ -174,7 +179,8 @@ def user_login():
         user = current_users.get_user(form.name.data)
         login_user(user)
         user.set('authenticated', True)
-		user.set('active', True)
+        user.set('active', True)
+        session['username'] = form.name
         flash('Login successful.', 'success')
         return redirect(request.args.get("next") or url_for('wiki.index'))
     return render_template('login.html', form=form)
@@ -184,7 +190,7 @@ def user_login():
 @login_required
 def user_logout():
     current_user.set('authenticated', False)
-	current_user.set('active', False)
+    current_user.set('active', False)
     logout_user()
     flash('Logout successful.', 'success')
     return redirect(url_for('wiki.index'))
@@ -195,7 +201,7 @@ def user_logout():
 def user_index():
     users = []
     """move this to user.py"""
-    with open("user/users.json") as file:
+    with open(os.path.join(current_app.config['USER_DIR'], "users.json")) as file:
         data = json.load(file)
         k = data.keys()
         for u in k:
@@ -254,6 +260,44 @@ def upload_image():
 @bp.route('/upload/<string:filename>')
 def image_response(filename):
     return send_from_directory(current_app.config['IMG_DIR'], filename)
+
+
+@bp.route('/history/<path:url>')
+def history(url):
+    list = find_diffs(url)
+    if len(list) == 0:
+        flash("This is the only copy of the page.", 'error')
+        return redirect(url_for('wiki.display', url=url))
+    else:
+        return render_template("history.html", rev_urls=list)
+
+
+@bp.route('<path:url>/rev/<int:rev_num>')
+def revision(url, rev_num):
+    list = find_diffs(url)
+    cur = list[rev_num]
+    temp_rollback(list, rev_num)
+
+
+# returns a list of diffs for the url, if any
+def find_diffs(url):
+    keys = ['filename', 'rev_num', 'date', 'author']
+    list = []
+    for file in os.listdir(current_app.config['CONTENT_DIR']):
+        if url in file and file.endswith(".diff"):
+            vals = [url]
+            vals.extend(file.replace('.diff', '').split('_'))
+            if len(vals) == 4:
+                list.append({zip(keys, vals)})
+    return sorted(list, key=lambda k: k['rev_num'], reverse=True)
+
+
+def temp_rollback(diffs, rev_num):
+    if len(diffs) > 0:
+        for diff in diffs:
+            with open(os.path.join(current_app.config('CONTENT_DIR'), diff['filename'])) as f:
+                f.read().splitlines(1)
+
 
 
 """
